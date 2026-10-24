@@ -1,43 +1,39 @@
-KART MASASI 3D — SÜRÜM 2 (TEK DOSYA)
+KART MASASI 3D — SÜRÜM 3 (TEK DOSYA)
 
-İKİ DOSYA VAR, İKİSİ DE TEK BAŞINA ÇALIŞIR:
+DOSYALAR
   1) kart-masasi-tek-dosya.html
-     Okunabilir sürüm. Oyunun tamamı (HTML + CSS + JavaScript) bu dosyada; yalnızca three.js CDN'den gelir
-     (cdnjs -> jsDelivr -> unpkg yedekli). Başka bir yapay zekaya / geliştiriciye vermek için bunu kullan.
+     Okunabilir sürüm. Oyunun tamamı bu dosyada; three.js'i CDN'den çeker (internet ister).
+     Başka bir yapay zekaya / geliştiriciye vermek ve kod düzenlemek için bunu kullan.
   2) kart-masasi-tek-dosya-offline.html
-     Aynı oyun + three.js (r128, MIT) dosyanın içine gömülü. İNTERNET GEREKMEZ; çift tıkla, anında açılır.
-     Oynamak / arşivlemek / internet olmayan bir ortama taşımak için bunu kullan. (Yaklaşık 680 KB.)
+     Aynı oyun + three.js (r128, MIT) dosyanın içine gömülü. İNTERNET GEREKMEZ; çift tıkla açılır.
+     Oynamak, arşivlemek veya internet olmayan bir ortama taşımak için bunu kullan. (~684 KB)
 
-ÇALIŞTIRMA
-  • Dosyayı çift tıkla veya tarayıcıya sürükle (Chrome, Edge, Firefox, Safari).
-  • Ya da herhangi bir statik yere index.html adıyla yükle: Vercel, GitHub Pages, Netlify, bir klasör...
-  • Online mod (isteğe bağlı) herkese açık MQTT aracıları (WebSocket) kullanır; sunucu/hesap gerekmez, internet ister.
-  • Harici görsel, ses, font dosyası YOKTUR. Duman, ses ve efektler kodun içinde üretilir.
-
-BU SÜRÜMDEKİ DEĞİŞİKLİKLER
-  1. Halı düzeltildi: masadan yanlara taşmıyor. Yuvarlak uçlu, masanın içine oturan 3.46 x 1.01 örtü.
-  2. Ortaya atılan kart artık havadan düşmüyor: masaya yakın yükseklikten 265-300 ms'de hızla fırlıyor,
-     dönerek oturuyor ve diğer kartların ~0.16 birim önüne (kameraya doğru) iniyor.
-  3. Kart inince atan karakter (bot gövdesi), masa ve kamera hafifçe sarsılıyor;
-     kartın altında kısa bir duman pufu çıkıyor ve WebAudio ile "şlap" sesi çalıyor.
-  4. Çok hafif piksel görünüm: varsayılan render oranı 0.82 + image-rendering:pixelated + ince scanline/vinyet.
-     🔲 düğmesi veya P tuşu: hafif -> kapalı -> belirgin. Ayar localStorage.kmpx içinde saklanır.
-  5. Küçük iyileştirmeler: sıra halkası + bot nefes animasyonu, ses aç/kapa (M tuşu veya 🔊 düğmesi,
-     localStorage.kmmute), Sabotaj Tozu için mor duman, üçlü CDN yedeği, three.js hata ekranı.
+SÜRÜM 3'TE NE DEĞİŞTİ
+  • Piksel efekti VARSAYILAN KAPALI (okunabilirlik). 🔲 düğmesi veya P tuşu:
+    hafif (0.90) → kapalı → belirgin (0.60). Scanline/vinyet yalnızca piksel modu açıkken görünür.
+  • "Kart çek" artık kartı masaya koymuyor: çekilen kart YALNIZCA sağ-alt panelde
+    "🔒 Sadece sen görüyorsun" olarak görünür. Diğer oyuncular kartı görmez; sadece çekildiğini bilir.
+  • "Ortaya at" seçilince kart havaya fırlar ve dizili kartların önündeki boş alana düşer
+    (dizinin üstüne değil). Sarsıntı + duman SADECE bu harekette çalışır.
+  • Elden normal kart koyma: hızlı fırlatma; sarsıntı ve duman YOK.
+  • Daha arkadaş bozucu: kart kapma artık +3 / −3 puan çalıyor. Botlar daha sık kapıyor.
+    Bitiş ekranında "kim kimi soydu" yazıyor.
+  • Masa düzeni: deste sırası geriye alındı, halı büyütüldü, parşömen daha yatık yapıldı;
+    böylece atılan kart önde ve görünür kalıyor.
+  • Sıra halkası + bot nefes animasyonu, WebAudio sesler (dosya yok), M ile ses, Esc ile çıkış.
 
 KISAYOLLAR
   Boşluk = PAS · D = kart çek · T = talimatım · H = nasıl oynanır · C = sohbet · M = ses · P = piksel · Esc = çıkış
 
 DOĞRULAMA
-  • Chromium (headless, yazılım WebGL) ile test edildi: 2, 3 ve 4 kişilik oyun; kart atma, kart çekme,
-    sarsıntı, duman, piksel modları ve bitiş ekranı çalışıyor; konsolda hata yok.
-  • Offline sürüm, TÜM ağ istekleri engellenerek test edildi: three.js gömülü olduğu için sorunsuz açıldı.
-  • SHA-256 (kart-masasi-tek-dosya.html):          c91e206b61c7195bcda92cb381e0201e6015e2fcd0289e816c733d5e5c64fbc3
-  • SHA-256 (kart-masasi-tek-dosya-offline.html):  66211ab02709d1e28ee3ad0fa7b06478d2ba16347ef947e070fd22b576d00da7
+  • Chromium (headless, yazılım WebGL) ile test edildi: 2/3/4 kişilik oyun, çek → ortaya at,
+    elden atma, kapma (+3/−3), bitiş ekranı, piksel modları; konsolda hata yok.
+  • Offline sürüm TÜM ağ istekleri engellenerek açıldı; sorunsuz çalıştı.
+  • SHA-256 (kart-masasi-tek-dosya.html):          b452923d513fb8988029f24dc9b61b9d8354fca780d3fb4b10ddbd9c526f0ed2
+  • SHA-256 (kart-masasi-tek-dosya-offline.html):  f5067da10396f1b5ba51dba179d0835cad9ecafea1b26b5a564bab99296576c1
 
 BAŞKA BİR YAPAY ZEKAYA / ORTAMA AKTARMA
-  • Okunabilir sürümün içeriğini olduğu gibi ver; en üstteki yorum bloğu mimariyi, kod haritasını ve
-    tasarım kararlarını anlatır. Ek dosya gerekmez.
-  • Offline sürümde three.js gömülü olduğu için dosya büyüktür; kod düzenlemek için okunabilir sürümü kullan.
-  • Değişiklikten sonra tarayıcı konsolunda hata olup olmadığına bak; üst üste binen yüzeylerde
-    z-fighting olmaması için y değerlerini 0.01'den fazla ayır.
+  • Okunabilir sürümün içeriğini olduğu gibi ver; en üstteki yorum bloğu mimariyi,
+    kod haritasını ve tasarım kararlarını anlatır.
+  • Offline sürümde three.js gömülü olduğu için dosya büyüktür; düzenlemek için okunabilir sürümü kullan.
+  • 3D sahnede z-fighting olmaması için üst üste binen yüzeylerin y değerlerini 0.01'den fazla ayır.
