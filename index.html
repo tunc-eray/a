@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-KART MASASI 3D: TEK DOSYA (HTML + CSS + JS içinde). MIT lisansı.
+KART MASASI 3D — SÜRÜM 3: TEK DOSYA (HTML + CSS + JS içinde). MIT lisansı.
 
 NE: three.js (r128) ile yazılmış 3D, sıra tabanlı, gizli talimatlı blöf kart oyunu. 2-4 kişilik; boş koltuklara bot oturur.
 Çevrimdışı (botlarla) ve online (arkadaşlarla) oynanır. Telefon/bilgisayar modu ilk ekranda sorulur. Arayüz Türkçe.
@@ -16,8 +16,8 @@ KURALLAR: Herkes 2 kartla başlar, kalanlar destede. Sıra gelince karta tıkla 
   Gizli ittifak (3-4 kişi): iki ortağın toplamı diğerlerinin toplamından yüksekse ikisi de +10, değilse -3.   Sabotaj Tozu: kapalı konursa üçlü bonus iptal olur.
 
 KOD HARİTASI (<script> içinde, yaklaşık yukarıdan aşağı):
-  sahne: renderer, scene, cam, fit, mk, sprite, faceTex/backTex/shadowTex, cardMesh, showMid/hideMid
-  arayüz: R (kural metinleri), say, bubble, hud, deckUI, layout (elim), layoutRow (masadaki sıra), drawRP (parşömen dokusu)
+  sahne: renderer, scene, cam, fit, mk, sprite, faceTex/backTex/shadowTex, cardMesh, showMid(c,up,fx)/hideMid
+  arayüz: R (kural metinleri), say, bubble, hud, deckUI (özel çekilen kart + mid), layout (elim), layoutRow (masadaki sıra), drawRP
   cihaz + parşömen: setDev, updAct, handMesh, parchTick (bant sökme / el animasyonu), openBig/closeBig, askExit/doExit
   online: clean/esc, relayApi, mqttApi (mqttOpen = kendi küçük MQTT 3.1.1 istemcisi), roomApi, onlineMenu/createRoom/joinRoom, netPeers,
           startOnline, remote, rejoin, sync (host), clientSetup/applyView/feeds (istemci)
@@ -27,23 +27,29 @@ KOD HARİTASI (<script> içinde, yaklaşık yukarıdan aşağı):
   tıklama/klavye/döngü: pointerdown/pointermove/keydown, loop
   efektler (sürüm 2): TABLE (masa grubu), SEAT (bot gövde/halka), KICK+shake, SMK/puff/smokeTex, EASE/flingCard,
                       PXLV/pxMode/pxRatio/applyPx/cyclePx, AC/sfx/nbuf/toggleMute
-  Ana durum nesnesi: G (items, holder, thrown, pot, deck, rules, tr=hain, tri=üçlü, cur, my, card, mid...). Zamanlayıcılar later() ile kurulur.
+  Ana durum nesnesi: G (items, holder, thrown, pot, deck, rules, tr=hain, tri=üçlü, cur, my, card, mid, grabs...). Zamanlayıcılar later() ile kurulur.
+  Puan: finish() içinde üçlü + ikili/yalan + kapma (grabs: +3/−3) + ittifak sırasıyla uygulanır.
 
 TASARIM KARARLARI (değiştirmeden önce düşün):
   Oyun çıkmaza girmemeli: her talimatın iki sonucu var, ortada en az 3 kart gerekir, herkes pas derse destede kalanlar dağıtılır.
   Sıra PAS'a kadar değişmez. Kart çekmek/almak/ortaya atmak zorunlu değil. Talimatlar gizli; botlar başta talimatlarını doğru ya da yalan açıklar.
   Online: host yetkili (oyun mantığı oda sahibinin tarayıcısında). Taşıma katmanı: join(oda) -> {presence(patch), peers(), onPeers(fn), leave()}.
   presence anahtarları [A-Za-z_][A-Za-z0-9_-]* olmalı, oyuncuya özel veriler DİZİ içinde, metinler clean() ile temiz. Peer kimliği p.peer===NET.me ile karşılaştırılır.
-  Çekilen/ortaya atılan kart havada durmaz: masaya, dizilen kartların üstüne düz konur (parlayan çerçeve = kapılabilir). Talimat parşömeni tahta duvara bantlıdır; tıklayınca eller bantı sökerek getirir (havada durmaz). Çıkış her zaman onay ister.
+  Çekilen kart panelde gizli kalır; "ortaya at" deyince havaya fırlayıp dizinin önüne düz konar (parlayan çerçeve = kapılabilir). Talimat parşömeni tahta levhaya bantlıdır; tıklayınca eller bantı sökerek getirir. Çıkış her zaman onay ister.
 SÜRÜM 2 (bu dosyadaki son geliştirmeler):
   • Halı (masa örtüsü) artık yuvarlak uçlu ve masanın içinde: yanlardan taşmaz (TABLE grubu + 3.46x1.01 düzlem).
   • Ortaya atılan/çekilip atılan kart havadan düşmez: masaya yakın yükseklikten, 265-300 ms'de hızla fırlar, dönerek oturur.
     Yeni kart dizinin ~0.16 birim önüne (kameraya doğru) konar; sonraki atışta eski kart yumuşakça sıraya çekilir.
   • Kart inince: atan botun gövdesi + masa + kamera hafifçe sarsılır (KICK), kartın altında kısa duman pufu (SMK) ve WebAudio sesi.
-  • Çok hafif piksel görünüm: render oranı varsayılan 0.82 + image-rendering:pixelated + ince scanline/vinyet katmanı (#px).
-    🔲 düğmesi veya P tuşu: hafif → kapalı → belirgin. Ayar localStorage.kmpx içinde.
+  • Piksel görünümü: VARSAYILAN KAPALI (okunabilirlik için). 🔲 düğmesi veya P tuşu: hafif (0.90) → kapalı → belirgin (0.60).
+    Scanline/vinyet katmanı (#px) yalnızca piksel modu açıkken görünür. Ayar localStorage.kmpx2 içinde.
   • Ek: sıra halkası + bot nefes animasyonu, ses aç/kapa (M, localStorage.kmmute), üçlü CDN yedeği + three.js yüklenemezse bilgi ekranı.
   • Bütün efektler tek dosyada; harici görsel/ses dosyası yok. Masaüstü ve mobil aynı dosyayı kullanır.
+SÜRÜM 3 (son):
+  • "Kart çek" artık kartı masaya koymaz: çekilen kart YALNIZCA sağ-alt panelde "🔒 Sadece sen görüyorsun" olarak görünür; diğer oyuncular görmez.
+  • "Ortaya at" seçilince kart havaya fırlar, dizili kartların önündeki boş alana düşer; sarsıntı + duman SADECE bu harekette çalışır.
+  • Elden normal kart koyma: hızlı fırlatma; sarsıntı/duman yok. Deste sırası geriye alındı, halı büyütüldü, parşömen daha yatık.
+  • Daha arkadaş bozucu: kart kapma artık +3 / −3 puan çalıyor; botlar daha sık kapıyor. Bitiş ekranında "kim kimi soydu" yazar.
 BİLİNEN EKSİKLER: 3D yerleşim ve dokunmatik kontroller gerçek cihazlarda az denendi. presence herkese açıktır (başkasının eli teknik olarak okunabilir).
 Bot sohbeti hazır cümlelerden. Ses efektleri WebAudio ile sentezlenir (ses dosyası yok). Eski tam proje (sunucu, testler): TUM-KODLAR.txt.
 -->
@@ -65,6 +71,11 @@ canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
 #top .ev{font-size:11px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(520px,90vw);margin:0 auto}
 #bar{left:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));padding:0;background:none;border:0;display:flex;gap:8px;backdrop-filter:none;-webkit-backdrop-filter:none}
 #deck{right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));width:150px;text-align:center}
+#deck.has{width:190px;border-color:#e9c46a99;background:rgba(28,18,44,.94);box-shadow:0 0 0 2px #e9c46a26,0 14px 40px #000c}
+#deck .item.big{font-size:48px;line-height:1.08;filter:drop-shadow(0 3px 10px #0008)}
+#deck .nm{font-weight:800;font-size:15px;letter-spacing:.2px}
+#deck .priv{display:block;font-size:10px;opacity:.62;margin:3px 0 7px}
+#deck .sab{color:#e0a0ff;font-size:11px;font-weight:700}
 .item{font-size:34px}
 #chat{left:8px;bottom:calc(60px + env(safe-area-inset-bottom,0px));width:min(420px,92vw);display:none}
 #chat.open{display:block}
@@ -170,11 +181,11 @@ const held=p=>G.items.map((_,i)=>i).filter(i=>G.holder[i]===p&&!G.thrown[i]);
 const left=p=>held(p).length>0;
 const W=()=>innerWidth,H=()=>innerHeight;
 // ---------- sahne ----------
-const PXLV=[.82,1,.55],PXLN=["hafif","kapalı","belirgin"];let pxMode=0,pxT=0;
-try{const v=parseInt(localStorage.kmpx,10);if(v>=0&&v<3)pxMode=v}catch(e){}
+const PXLV=[.9,1,.6],PXLN=["hafif","kapalı","belirgin"];let pxMode=1,pxT=0;
+try{const v=parseInt(localStorage.kmpx2,10);if(v>=0&&v<3)pxMode=v}catch(e){}
 const pxRatio=()=>pxMode===1?Math.min(devicePixelRatio||1,2):PXLV[pxMode];
 const renderer=new T.WebGLRenderer({antialias:true,powerPreference:"high-performance"});renderer.setPixelRatio(pxRatio());renderer.setSize(W(),H());renderer.domElement.style.imageRendering=pxMode===1?"auto":"pixelated";document.body.prepend(renderer.domElement);
-function applyPx(){renderer.setPixelRatio(pxRatio());renderer.setSize(W(),H());renderer.domElement.style.imageRendering=pxMode===1?"auto":"pixelated";const b=$("pxb");if(b)b.textContent=pxMode===1?"🔳":"🔲";try{localStorage.kmpx=pxMode}catch(e){}if(pxT)clearTimeout(pxT);pxT=setTimeout(()=>{if(G&&!G.cli)say("Piksel efekti: "+PXLN[pxMode],1)},90)}
+function applyPx(){renderer.setPixelRatio(pxRatio());renderer.setSize(W(),H());renderer.domElement.style.imageRendering=pxMode===1?"auto":"pixelated";const b=$("pxb");if(b)b.textContent=pxMode===1?"🔳":"🔲";const ov=$("px");if(ov){ov.style.display=pxMode===1?"none":"block";ov.style.opacity=pxMode===2?".42":".26"}try{localStorage.kmpx2=pxMode}catch(e){}if(pxT)clearTimeout(pxT);pxT=setTimeout(()=>{if(G&&!G.cli)say("Piksel efekti: "+PXLN[pxMode],1)},90)}
 function cyclePx(){pxMode=(pxMode+1)%3;applyPx()}
 const scene=new T.Scene();scene.background=new T.Color(0x1a1420);
 const cam=new T.PerspectiveCamera(58,W()/H(),.1,60);
@@ -190,17 +201,17 @@ TABLE.add(mk(new T.CylinderGeometry(2.3,2.3,.12,48),0x8a5a36,0,.96,0));
 mk(new T.PlaneGeometry(30,30).rotateX(-Math.PI/2),0x2a2030,0,0,0);
 TABLE.add(mk(new T.TorusGeometry(2.3,.05,8,64).rotateX(Math.PI/2),0xc8922a,0,1.02,0,{metalness:.7,roughness:.35}));
 { // HALI: yuvarlak uclu, masanin icine sigar (yanlardan tasmaz)
- const c=document.createElement("canvas");c.width=1024;c.height=300;const x=c.getContext("2d"),rr=118;
+ const c=document.createElement("canvas");c.width=1024;c.height=500;const x=c.getContext("2d"),rr=170;
  const rrect=(X,Y,W2,H2,R)=>{x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W2,Y,X+W2,Y+H2,R);x.arcTo(X+W2,Y+H2,X,Y+H2,R);x.arcTo(X,Y+H2,X,Y,R);x.arcTo(X,Y,X+W2,Y,R);x.closePath()};
- rrect(3,3,1018,294,rr);x.save();x.clip();
- let g=x.createLinearGradient(0,0,1024,0);g.addColorStop(0,"#1b1040");g.addColorStop(.5,"#2d1a63");g.addColorStop(1,"#1b1040");x.fillStyle=g;x.fillRect(0,0,1024,300);
- x.strokeStyle="#e9c46a";x.lineWidth=9;rrect(18,18,988,264,rr-10);x.stroke();
- x.strokeStyle="#e9c46a77";x.lineWidth=2;rrect(38,38,948,224,rr-24);x.stroke();
+ rrect(3,3,1018,494,rr);x.save();x.clip();
+ let g=x.createLinearGradient(0,0,1024,0);g.addColorStop(0,"#1b1040");g.addColorStop(.5,"#2d1a63");g.addColorStop(1,"#1b1040");x.fillStyle=g;x.fillRect(0,0,1024,500);
+ x.strokeStyle="#e9c46a";x.lineWidth=9;rrect(18,18,988,464,rr-10);x.stroke();
+ x.strokeStyle="#e9c46a77";x.lineWidth=2;rrect(38,38,948,424,rr-24);x.stroke();
  x.fillStyle="#e9c46a";x.font="34px Georgia,serif";x.textAlign="center";x.textBaseline="middle";
- for(let k=0;k<20;k++){x.fillText(k%2?"✦":"☾",110+k*42,52);x.fillText(k%2?"☾":"✦",110+k*42,248)}
- x.strokeStyle="#e9c46a55";x.lineWidth=3;[118,88].forEach(r=>{x.beginPath();x.arc(512,150,r,0,7);x.stroke()});
- x.fillStyle="#e9c46a22";x.beginPath();x.arc(512,150,58,0,7);x.fill();x.restore();
- const m=new T.Mesh(new T.PlaneGeometry(3.46,1.01).rotateX(-Math.PI/2),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true}));m.position.set(0,1.035,-.16);TABLE.add(m)}
+ for(let k=0;k<20;k++){x.fillText(k%2?"✦":"☾",110+k*42,64);x.fillText(k%2?"☾":"✦",110+k*42,436)}
+ x.strokeStyle="#e9c46a55";x.lineWidth=3;[150,110].forEach(r=>{x.beginPath();x.arc(512,250,r,0,7);x.stroke()});
+ x.fillStyle="#e9c46a22";x.beginPath();x.arc(512,250,70,0,7);x.fill();x.restore();
+ const m=new T.Mesh(new T.PlaneGeometry(3.46,1.7).rotateX(-Math.PI/2),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true}));m.position.set(0,1.035,-.6);TABLE.add(m)}
 const PN=70,pg=new T.BufferGeometry(),pa=new Float32Array(PN*3);for(let i=0;i<PN;i++){pa[i*3]=(Math.random()-.5)*5;pa[i*3+1]=1.1+Math.random()*1.8;pa[i*3+2]=(Math.random()-.5)*4}
 pg.setAttribute("position",new T.BufferAttribute(pa,3));
 scene.add(new T.Points(pg,new T.PointsMaterial({color:0xffe08a,size:.06,transparent:true,opacity:.85,blending:T.AdditiveBlending,depthWrite:false})));
@@ -227,15 +238,16 @@ let SHT=null;function shadowTex(){if(!SHT){const c=document.createElement("canva
  SHT=new T.CanvasTexture(c)}return SHT}
 function cardMesh(map,w=.56,h=.8){const m=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map,side:T.DoubleSide}));scene.add(m);return m}
 let GLT=null;function glowTex(){if(!GLT){const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d"),g=x.createRadialGradient(64,64,10,64,64,64);g.addColorStop(0,"rgba(255,225,130,0)");g.addColorStop(.6,"rgba(255,215,110,.55)");g.addColorStop(1,"rgba(255,200,80,0)");x.fillStyle=g;x.fillRect(0,0,128,128);GLT=new T.CanvasTexture(c)}return GLT}
-function showMid(c,up){hideMid();midC=cardMesh(up?cards[c].userData.face:backTex(),.64,.92);
+function showMid(c,up,fx){hideMid();midC=cardMesh(up?cards[c].userData.face:backTex(),.64,.92);
  const sh=new T.Mesh(new T.PlaneGeometry(.8,1.08),new T.MeshBasicMaterial({map:shadowTex(),transparent:true,depthWrite:false}));sh.position.set(.03,-.035,-.004);midC.add(sh);
  const gl=new T.Mesh(new T.PlaneGeometry(.95,1.22),new T.MeshBasicMaterial({map:glowTex(),transparent:true,depthWrite:false,opacity:0}));gl.position.z=-.002;midC.add(gl);midC.userData.gl=gl;
  const [dx,dz]=G.cur>0?dirv(G.cur):[0,1];
- const from=new T.Vector3(dx*1.25,1.06,dz*1.25),to=new T.Vector3(.04,1.075,-.06);  // masaya yakın, hızla fırlar (havadan düşmez)
- midC.rotation.set(-Math.PI/2,0,.09);midC.position.copy(from);midC.scale.setScalar(.86);
- tw.push({m:midC,a:from.clone(),b:to,ra:{x:-Math.PI/2},rx:-Math.PI/2,rz:.04,sa:.86,sb:1,h:.045,t0:performance.now(),d:300,ease:EASE.out,spin:.55,
-  done:()=>{puff(to.x,1.07,to.z,8,1);sfx("slap")}});
- shake(.55,300,G.cur);sfx("whoosh")}
+ const from=G.cur===0?new T.Vector3(1.5,1.06,1.2):new T.Vector3(dx*1.25,1.06,dz*1.25);
+ const to=new T.Vector3(.04,1.075,-.06);   // dizili kartlarin ONUNE, bos alana duser
+ midC.rotation.set(-Math.PI/2,0,.12);midC.position.copy(from);midC.scale.setScalar(.84);
+ tw.push({m:midC,a:from.clone(),b:to,ra:{x:-Math.PI/2},rx:-Math.PI/2,rz:.03,sa:.84,sb:1,h:.56,t0:performance.now(),d:560,ease:EASE.out,spin:1.5,
+  done:()=>{const it=G&&G.items[c];if(fx)puff(to.x,1.08,to.z,12,1.35,it&&it.sab?0x8f7ab8:0xe6ddc8);sfx("slap")}});
+ if(fx)shake(.9,430,G.cur);sfx("whoosh")}
 function hideMid(){if(midC){scene.remove(midC);midC=null}}
 // ---------- efektler: sarsıntı, duman, fırlatma, ses ----------
 let SMT=null;function smokeTex(){if(!SMT){const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d"),g=x.createRadialGradient(64,64,4,64,64,64);g.addColorStop(0,"rgba(255,255,255,.9)");g.addColorStop(.45,"rgba(255,255,255,.35)");g.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=g;x.fillRect(0,0,128,128);SMT=new T.CanvasTexture(c)}return SMT}
@@ -262,8 +274,8 @@ addEventListener("pointerdown",()=>{ac()},{once:true});
 function flingCard(c,b,jr,sc,p){
  const a=c.position.clone();a.y=1.055;
  tw.push({m:c,a,b,ra:c.rotation.clone(),rx:-Math.PI/2,rz:jr,sa:c.scale.x,sb:sc,h:.04,t0:performance.now(),d:265,ease:EASE.out,spin:(Math.random()<.5?-1:1)*(.45+Math.random()*.3),
-  done:()=>{const it=G&&G.items[c.userData.i];puff(b.x,1.07,b.z,p===0?10:6,p===0?1.2:.9,it&&it.sab?0x8f7ab8:0xe6ddc8);sfx("slap")}});
- shake(p===0?.85:.6,340,p);sfx("whoosh");
+  done:()=>{sfx("slap")}});
+ sfx("whoosh");
 }
 
 // ---------- metinler ----------
@@ -282,7 +294,7 @@ function say(t,sys,who,p){const d=document.createElement("div"),pl=String(t).rep
 function ub(){$("cb").innerHTML='💬'+(unread?`<i class="bd">${unread}</i>`:"")}
 function toggleChat(){$("chat").classList.toggle("open");unread=0;ub()}
 function bubble(p,t,ms=6000,quiet){const b=tags[p].firstChild;b.textContent=t;b.style.display="block";clearTimeout(b.t);b.t=setTimeout(()=>b.style.display="none",ms);if(!quiet)say(t.replace(/\n/g,"<br>"),0,NM[p],p)}
-function hud(){const st=G.over?"<b>Oyun bitti</b>":G.intro?"Herkes talimatını açıklıyor…":G.card!=null&&G.cur==0?"<b>Kart çektin:</b> al, ortaya at ya da geri koy":G.my?(DEV==="mob"?"<b>Sıra sende!</b> Karta dokun, bitince altın PAS’a":"<b>Sıra sende!</b> Karta tıkla, bitince PAS (Boşluk)"):"Sıra: <b>"+NM[G.cur]+"</b>";
+function hud(){const st=G.over?"<b>Oyun bitti</b>":G.intro?"Herkes talimatını açıklıyor…":G.card!=null&&G.cur==0?"<b>Kart çektin:</b> sadece sen görüyorsun — al, ortaya at ya da geri koy":G.my?(DEV==="mob"?"<b>Sıra sende!</b> Karta dokun, bitince altın PAS’a":"<b>Sıra sende!</b> Karta tıkla, bitince PAS (Boşluk)"):"Sıra: <b>"+NM[G.cur]+"</b>";
  $("top").innerHTML=`<div class="st">${st}</div><div class="ct">🃏 Ortada ${G.pot.length}/3 · 🎴 Deste ${G.deck.length}</div><div class="ev">${G.last||""}</div>`;qSync();updAct()}
 const readHtml=()=>DEV==="mob"||cam.aspect<1.35;
 function openBig(){if(!G||PA.s!=="wall")return;PA.s="peel";PA.t0=performance.now()}
@@ -302,22 +314,24 @@ function drawRP(){const c=rpC,x=c.getContext("2d"),W2=c.width,H2=c.height,J=k=>(
  x.fillStyle="#9b1c1c";x.beginPath();x.arc(W2-170,H2-130,54,0,7);x.fill();x.fillStyle="#e07a7a";x.font="bold 62px serif";x.textAlign="center";x.fillText("✦",W2-170,H2-108);x.textAlign="left";rpT.needsUpdate=true}
 function deckUI(){qSync();const d=$("deck"),sb="<br><small>Ortaya konursa üçlü bonusu iptal eder.</small>";
  if(G.dk){G.dk.scale.y=Math.max(.2,G.deck.length*.4);G.dk.position.y=1.02+.05*G.dk.scale.y}
- d.style.display=(G.card!=null&&G.cur==0)||G.mid?"block":"none";
- if(G.card!=null&&G.cur==0){const c=G.items[G.card];d.innerHTML=`<b>Çektiğin kart</b><div class="item">${c.e}</div>${c.n}${c.sab?sb:""}<br><button class="ok" onclick="take('al')">✔ Al</button><button class="alt" onclick="take('at')">↗ Ortaya at</button><button class="alt" onclick="take('geri')">↩ Geri koy</button>`}
- else if(G.mid){const c=G.items[G.mid.c];d.innerHTML=`<b>Ortadaki kart</b><div class="item">${c.e}</div>${c.n}${c.sab?sb:""}<br>${G.mid.from==0?"<small>Biri kapana kadar bekle…</small>":`<small>${DEV==="mob"?"Ortadaki karta dokun!":"Ortadaki kartın üstüne tıkla!"}</small>`}`}
+ const mine=G.card!=null&&G.cur==0;
+ d.classList.toggle("has",!!mine);
+ d.style.display=mine||G.mid?"block":"none";
+ if(mine){const c=G.items[G.card];d.innerHTML=`<b>🔒 Çektiğin kart</b><div class="item big">${c.e}</div><div class="nm">${c.n}</div><small class="priv">Sadece sen görüyorsun</small>${c.sab?`<div class="sab">${SABN}</div>`:""}<button class="ok" onclick="take('al')">✔ Al</button><button class="pri" onclick="take('at')">↗ Ortaya at</button><button class="alt" onclick="take('geri')">↩ Geri koy</button>`}
+ else if(G.mid){const c=G.items[G.mid.c];d.innerHTML=`<b>Ortadaki kart</b><div class="item">${c.e}</div><div class="nm">${c.n}</div>${c.sab?sb:""}<br>${G.mid.from==0?"<small>Biri kapana kadar bekle…</small>":`<small>${DEV==="mob"?"Ortadaki karta dokun!":"Ortadaki kartın üstüne tıkla!"}</small>`}`}
  else d.innerHTML=`🎴 Deste<br><b>${G.deck.length}</b> kart`+(DEV==="pc"&&G.my&&G.cur==0&&!G.drew&&G.deck.length?`<br><button onclick="drawBtn()">Kart çek</button>`:"")}
 function layout(){const m=held(0),s=Math.min(.64,2.2/Math.max(m.length,1));cards.forEach((c,i)=>{if(!G.thrown[i])c.visible=m.includes(i)});
  m.forEach((i,k)=>{cards[i].position.set((k-(m.length-1)/2)*s,1.19,2.0);cards[i].rotation.set(-1.15,0,0);cards[i].scale.setScalar(1);cards[i].userData.sh.visible=false});drawRP()}
 function layoutRow(nw){const n=G.pot.length,s=Math.min(.7,3.5/n),sc=n>6?Math.max(.6,6.2/n):1;G.pot.forEach((i,k)=>{const c=cards[i],
   jx=((i*53)%11-5)*.008,jz=((i*37)%13-6)*.008,jr=((i*29)%13-6)*.014,front=i===nw?.16:0,
-  b=new T.Vector3((k-(n-1)/2)*s+jx,1.052+k*.0035,-.2+jz+front);
+  b=new T.Vector3((k-(n-1)/2)*s+jx,1.052+k*.0035,-1.0+jz+front);
  if(G.items[i].sab){c.material.map=backTex();c.material.needsUpdate=true}
  c.userData.sh.visible=true;c.visible=true;
  if(i===nw)flingCard(c,b,jr,sc,G.holder[i]);
  else if(Math.hypot(c.position.x-b.x,c.position.z-b.z)>.012)tw.push({m:c,a:c.position.clone(),b,ra:c.rotation.clone(),rx:-Math.PI/2,rz:jr,sa:c.scale.x,sb:sc,h:0,t0:performance.now(),d:190,ease:EASE.out});
  else{c.position.copy(b);c.rotation.set(-Math.PI/2,0,jr);c.scale.setScalar(sc)}})}
 
-const PA={s:"wall",t0:0,tp:[],hd:[]},PW={p:new T.Vector3(0,1.339,1.479),q:new T.Quaternion().setFromEuler(new T.Euler(-.3,0,0))};
+const PA={s:"wall",t0:0,tp:[],hd:[]},PW={p:new T.Vector3(0,1.347,1.481),q:new T.Quaternion().setFromEuler(new T.Euler(-.5,0,0))};
 function setDev(d){DEV=d;document.body.dataset.dev=d;document.body.className="menu";try{localStorage.kmdev=d}catch(e){}fit();if(G)updAct()}
 function updAct(){if(!G)return;const turn=!!(G.my&&PA.s==="wall");$("a_pass").disabled=!turn;$("a_pass").classList.toggle("turn",turn);$("a_draw").disabled=!(G.my&&G.cur==0&&!G.drew&&G.deck.length&&G.card==null);$("a_grab").disabled=!(G.mid&&G.mid.from!=0)}
 function grabBtn(){if(G&&G.mid)grab(0,G.mid.c)}
@@ -335,7 +349,7 @@ function parchTick(){if(!G||!G.rp||!PA.tp.length)return;const rp=G.rp,t=performa
  else if(PA.s==="read"){a=1;c=1;tk=0}
  else if(PA.s==="back"){c=1-cl(t/900);a=1-cl((t-1300)/500);tk=cl((t-900)/400);if(t>=1800)PA.s="wall"}
  const ec=E(c);rp.position.lerpVectors(PW.p,R.p,ec);rp.quaternion.copy(PW.q).slerp(R.q,ec);rp.scale.setScalar(1+(R.s-1)*ec);rp.updateMatrixWorld(true);
- PA.tp.forEach((tp,k)=>{tp.visible=c===0&&tk>0;if(!tp.visible)return;const lf=1-tk;tp.position.copy(corner(k)).add(new T.Vector3(0,.13*lf,.012+.13*lf));tp.rotation.set(-.3-1.2*lf,0,k?-.3:.3);tp.material.opacity=.85*tk;tp.scale.setScalar(.6+.4*tk)});
+ PA.tp.forEach((tp,k)=>{tp.visible=c===0&&tk>0;if(!tp.visible)return;const lf=1-tk;tp.position.copy(corner(k)).add(new T.Vector3(0,.13*lf,.012+.13*lf));tp.rotation.set(-.5-1.2*lf,0,k?-.3:.3);tp.material.opacity=.85*tk;tp.scale.setScalar(.6+.4*tk)});
  PA.hd.forEach((h,k)=>{h.visible=a>0;if(!h.visible)return;const cn=corner(k),st=cn.clone().add(new T.Vector3(k?.5:-.5,-.9,2.4));h.position.lerpVectors(st,cn.add(new T.Vector3(0,0,.06)),E(a));h.lookAt(cam.position)})}
 {let r=(typeof matchMedia!=="undefined"&&matchMedia("(pointer:coarse)").matches)?"mob":"pc";try{r=localStorage.kmdev||r}catch(e){}const b=$("dev_"+r);if(b&&b.classList)b.classList.add("rec");document.body.dataset.dev="pc"}
 // ---------- online ----------
@@ -449,7 +463,7 @@ function sync(){if(!G||!NET||!G.online||G.cli||!ROOM)return;const n=G.n,v=[0];
  const s={g:G.gid,v:++NET.ver,n,nm:NM,c:G.cur,it:G.items.map(x=>x.sab?-1:BASEI(x)),p:G.pot,b:G.pot.map(i=>G.items[i].sab?-1:G.holder[i]),d:G.deck.length,m:G.mid?{c:G.mid.c,f:G.mid.from}:0,dw:G.card!=null?1:0,l:clean((G.last||"").slice(0,140)),o:G.over,i:G.intro,f,e:G.over?G.endData:0};
  pres({go:1,st:NET.st,s,v})}
 function clientSetup(s){teardown();const n=s.n;NET.names=s.nm;NM=s.nm.map((_,k)=>s.nm[(k+NET.seat)%n]);NET.fid=0;NET.midSig="";NET.endShown=0;
- G={n,items:s.it.map(k=>mkI(k<0?SAB:BASE[k])),objs:[],holder:[],thrown:[],pot:[],deck:[],cur:0,passes:0,tt:0,drew:0,intro:0,over:0,my:0,card:null,mid:null,sab:0,sabBy:-1,last:"",rules:[[]],hum:[],all:[],cli:1,online:1,pb:null,rp:null,dk:null,gid:s.g};
+ G={n,items:s.it.map(k=>mkI(k<0?SAB:BASE[k])),objs:[],holder:[],thrown:[],pot:[],deck:[],cur:0,passes:0,tt:0,drew:0,intro:0,over:0,my:0,card:null,mid:null,sab:0,sabBy:-1,last:"",rules:[[]],hum:[],all:[],cli:1,online:1,pb:null,rp:null,dk:null,gid:s.g,grabs:[]};
  buildScene();layout();deckUI();document.body.className="";$("end").style.display="none";$("big").style.display="none";$("olobby").style.display="none";$("log").innerHTML="";
  if(!HOWSEEN){HOWSEEN=true;showHow()}}
 function applyView(hp){const s=hp.s,v=hp.v&&hp.v[NET.seat];if(!s||!v||s.v<=NET.ver)return;NET.ver=s.v;
@@ -460,8 +474,8 @@ function applyView(hp){const s=hp.s,v=hp.v&&hp.v[NET.seat];if(!s||!v||s.v<=NET.v
  const nw=s.p.length==prev+1?s.p[s.p.length-1]:-1,f=nw>=0?s.b[s.p.length-1]:-1;
  if(nw>=0&&f>=0&&f!==NET.seat&&!G.items[nw].sab){const [dx,dz]=dirv(rot(f));cards[nw].position.set(dx*1.5,1.16,dz*1.5)}
  layout();if(s.p.length!==prev)layoutRow(nw);
- const sig=v.cd>=0?"u"+v.cd:s.m?"m"+s.m.c:s.dw?"b":"";
- if(sig!==NET.midSig){NET.midSig=sig;if(!sig)hideMid();else showMid(v.cd>=0?v.cd:s.m?s.m.c:0,sig[0]!="b")}
+ const sig=s.m?"m"+s.m.c:"";
+ if(sig!==NET.midSig){NET.midSig=sig;if(!sig)hideMid();else showMid(s.m.c,true,s.m.f===NET.seat)}
  deckUI();hud();feeds(s.f);if(s.o&&!NET.endShown){NET.endShown=1;showEndClient(s.e)}}
 function feeds(f){const g={};(f||[]).forEach(e=>{if(e.i<=NET.fid)return;NET.fid=e.i;const t=String(e.t).replace(/[<>]/g,"");if(e.s)return say(t,1);const vp=(e.p-NET.seat+G.n)%G.n;say(t,0,NM[vp]);(g[vp]=g[vp]||[]).push(t)});
  Object.entries(g).forEach(([vp,l])=>{if(+vp>0&&tags[+vp])bubble(+vp,l.join("\n"),8000,1)})}
@@ -480,6 +494,8 @@ const HOWH=`<div class="hw-t">🃏 KART MASASI</div>
 <div class="hw-l"><i>🃏</i><span><b>Sıran gelince</b> karta tıkla = ortaya koy. İstersen desteden kart çek. Bitince <b>PAS</b>.</span></div>
 <div class="hw-l"><i>💰</i><span><b>Ortadaki kartlar puan getirir ya da götürür.</b> Üçlü bonus herkese +10, ama <b>hain</b> onu bozmak ister!</span></div>
 <div class="hw-l"><i>🏁</i><span><b>Herkes üst üste pas deyince</b> oyun biter, talimatlar açılır, en çok puan kazanır.</span></div>
+<div class="hw-l"><i>🔒</i><span><b>Kart çekince</b> kart yalnızca sağ-alt panelde sana görünür. <b>Al</b>, <b>Ortaya at</b> ya da <b>Geri koy</b>.</span></div>
+<div class="hw-l"><i>😈</i><span><b>Kapmak puan çalar:</b> ortaya atılan kartı kapan +3, atan −3 alır. Arkadaşlıklar test edilir.</span></div>
 <div class="hw-d"></div>
 <p style="text-align:center;margin:14px 0 0"><button class="pri" onclick="closeHow()">⚔️ Hazırım</button></p>`;
 let HOWCB=null;
@@ -501,8 +517,8 @@ function buildScene(){
   const d=document.createElement("div");d.className="tag";d.innerHTML=`<div class="bub"></div><b>${NM[p]}</b>`;document.body.appendChild(d);tags[p]=d}
  G.items.forEach((it,i)=>{const c=add(cardMesh(faceTex(it))),sh=new T.Mesh(new T.PlaneGeometry(.7,.94),new T.MeshBasicMaterial({map:shadowTex(),transparent:true,depthWrite:false}));sh.position.set(.025,-.03,-.006);sh.visible=false;c.add(sh);c.userData={i,face:c.material.map,sh};c.rotation.x=-1.15;c.visible=false;cards[i]=c});
 
- const wd=add(mk(new T.BoxGeometry(2.5,.72,.06),0x5a3a22,0,1.33,1.45,{roughness:.9}));wd.rotation.x=-.3;
- const fr=add(mk(new T.BoxGeometry(2.64,.82,.05),0x2e1d10,0,1.33,1.425,{roughness:.9}));fr.rotation.x=-.3;
+ const wd=add(mk(new T.BoxGeometry(2.5,.72,.06),0x5a3a22,0,1.33,1.45,{roughness:.9}));wd.rotation.x=-.5;
+ const fr=add(mk(new T.BoxGeometry(2.64,.82,.05),0x2e1d10,0,1.33,1.425,{roughness:.9}));fr.rotation.x=-.5;
  rpC=document.createElement("canvas");rpC.width=2160;rpC.height=700;rpT=new T.CanvasTexture(rpC);
  G.rp=add(new T.Mesh(new T.PlaneGeometry(1.9,.616),new T.MeshBasicMaterial({map:rpT,transparent:true,side:T.DoubleSide})));G.rp.position.copy(PW.p);G.rp.quaternion.copy(PW.q);scene.add(G.rp);
  PA.s="wall";PA.tp=[0,1].map(()=>add(mk(new T.BoxGeometry(.24,.075,.01),0xe8dcb5,0,0,0,{transparent:true,opacity:.85})));
@@ -515,7 +531,7 @@ function buildScene(){
 }
 function setup(n,opts){teardown();
  const T0=[8,10,12][n-2],base=sh(BASE).slice(0,T0-1).map(mkI),sabId=T0-1,bids=[...Array(T0-1).keys()],P=[...Array(n).keys()];
- G={n,items:[...base,mkI(SAB)],objs:[],holder:[],thrown:[],pot:[],deck:[],cur:n-1,passes:0,tt:0,drew:0,intro:1,over:0,my:0,card:null,mid:null,midT:0,sab:0,sabBy:-1,last:"",rules:P.map(()=>[]),all:[],tr:0,tri:[],pb:null,rp:null,dk:null,hum:[...Array(n).keys()].map(p=>!!(p==0||(opts&&opts.hum&&opts.hum[p]))),online:!!(opts&&opts.hum),gid:Math.random().toString(36).slice(2,8),feed:[],fid:0,cli:0,endData:null};
+ G={n,items:[...base,mkI(SAB)],objs:[],holder:[],thrown:[],pot:[],deck:[],cur:n-1,passes:0,tt:0,drew:0,intro:1,over:0,my:0,card:null,mid:null,midT:0,sab:0,sabBy:-1,last:"",rules:P.map(()=>[]),all:[],tr:0,tri:[],pb:null,rp:null,dk:null,hum:[...Array(n).keys()].map(p=>!!(p==0||(opts&&opts.hum&&opts.hum[p]))),online:!!(opts&&opts.hum),gid:Math.random().toString(36).slice(2,8),feed:[],fid:0,cli:0,endData:null,grabs:[]};
  G.humO=G.hum.slice();const hand=sh(bids).slice(0,2*n);hand.forEach((it,k)=>G.holder[it]=k%n);
  G.deck=sh([...bids.filter(i=>!hand.includes(i)),sabId]);
  const mine=p=>hand.filter((_,k)=>k%n==p);
@@ -551,17 +567,17 @@ function sabReact(p){const bs=[...Array(G.n).keys()].filter(b=>b>0&&b!=p&&!G.hum
 function next(){if(G.over)return;if(NET&&NET.host&&ROOM&&G.online)rejoin(ROOM.peers());G.cur=(G.cur+1)%G.n;G.tt=0;G.drew=0;cont(G.cur,1200)}
 function cont(p,ms=900){hud();deckUI();
  if(G.hum[p]){G.my=1;if(p===0)sfx("blip");hud();deckUI();if(!left(p)&&(G.drew||!G.deck.length))later(()=>act(p,null),900)}else later(()=>botTurn(p),ms)}
-function draw(p){if(G.card!=null||G.drew||!G.deck.length)return;G.drew=1;G.card=G.deck.pop();if(G.hum[p])G.my=0;showMid(G.card,p==0);say(NM[p]+" desteden bir kart çekti.",1);deckUI();hud()}
+function draw(p){if(G.card!=null||G.drew||!G.deck.length)return;G.drew=1;G.card=G.deck.pop();if(G.hum[p])G.my=0;say(NM[p]+" desteden bir kart çekti.",1);deckUI();hud()}
 function drawBtn(){if(!G)return;if(G.cli){if(G.my&&G.card==null)netSend({a:"draw"});return}if(G.cur==0&&G.my&&G.card==null)draw(0)}
 function take(a,p=0){if(!G||!["al","at","geri"].includes(a))return;if(G.cli){if(G.card!=null)netSend({a:"take",v:a});return}if(G.cur!==p||G.card==null)return;decide(a)}
 function decide(a){if(G.card==null)return;const p=G.cur,c=G.card;G.card=null;hideMid();
  if(a=="al"){G.holder[c]=p;say(NM[p]+" çektiği kartı aldı.",1);if(p==0)layout()}
  else if(a=="geri"){G.deck.unshift(c);say(NM[p]+" kartı desteye geri koydu.",1)}
- else{G.mid={c,from:p};say(`${NM[p]} kartı ortaya attı: ${IN(c)}`,1);showMid(c,true);deckUI();hud();
-  for(let b=1;b<G.n;b++)if(b!=p&&!G.hum[b]&&(val(b,c)>.7||Math.random()<.18))later(()=>grab(b,c),1200+Math.random()*3000);
+ else{G.mid={c,from:p};say(`${NM[p]} kartı ortaya attı: ${IN(c)}`,1);showMid(c,true,p===0);deckUI();hud();
+  for(let b=1;b<G.n;b++)if(b!=p&&!G.hum[b]&&(val(b,c)>.55||Math.random()<.3))later(()=>grab(b,c),1200+Math.random()*3000);
   G.midT=later(()=>{const m=G.mid;if(!m)return;G.mid=null;hideMid();G.holder[m.c]=m.from;say("Kimse almadı, kart "+NM[m.from]+"’a döndü.",1);if(m.from==0)layout();cont(m.from)},6500);return}
  cont(p)}
-function grab(q,c){if(G&&G.cli){if(q==0&&G.mid)netSend({a:"grab",c});return}const m=G&&G.mid;if(!m||m.c!==c||q==m.from)return;clearTimeout(G.midT);G.mid=null;hideMid();G.holder[c]=q;say(NM[q]+" kartı kaptı!",1);if(q==0)layout();cont(m.from)}
+function grab(q,c){if(G&&G.cli){if(q==0&&G.mid)netSend({a:"grab",c});return}const m=G&&G.mid;if(!m||m.c!==c||q==m.from)return;clearTimeout(G.midT);G.mid=null;hideMid();G.holder[c]=q;(G.grabs=G.grabs||[]).push({by:q,from:m.from});say(`😈 ${NM[q]} kartı kaptı! (${NM[q]} +3 · ${NM[m.from]} −3)`,1);if(q==0)layout();cont(m.from)}
 function dealDeck(){let k=Math.floor(Math.random()*G.n);while(G.deck.length)G.holder[G.deck.pop()]=k++%G.n;say("Herkes pas dedi: destede kalan kartlar dağıtıldı.",1);G.passes=0;layout();deckUI();hud()}
 function act(p,i){if(G.over||G.cur!==p||G.card!=null||G.mid||(G.hum[p]&&!G.my)||(i!=null&&(G.holder[i]!==p||G.thrown[i])))return;
  if(i==null){
@@ -577,7 +593,8 @@ function act(p,i){if(G.over||G.cur!==p||G.card!=null||G.mid||(G.hum[p]&&!G.my)||
  if(G.hum[p]){if(!left(p)&&(G.drew||!G.deck.length))later(()=>act(p,null),900)}else later(()=>botTurn(p),1700)}
 function finish(){if(G.over)return;G.over=1;G.my=0;sfx("win");const n=G.n,sc=Array(n).fill(0),lg=[],tri=G.tri,done=tri.every(i=>G.thrown[i])&&!G.sab;
  for(let k=0;k<n;k++)sc[k]+=k==G.tr?(done?-15:10):(done?10:-3);
- lg.push(done?`✨ ${tri.map(IN).join(" + ")} ortada tamamlandı: herkes <b class="pos">+10</b>, hain ${NM[G.tr]} <b class="neg">−15</b>.`:`➖ Üçlü bonus ${G.sab?"sabote edildi":"tamamlanmadı"}: herkes <b class="neg">−3</b>, hain ${NM[G.tr]} <b class="pos">+10</b>.`);
+ lg.push(done?`✨ ${tri.map(IN).join(" + ")} ortada tamamlandı: herkes <b class="pos">+10</b>, hain ${NM[G.tr]} <b class="neg">−15</b>.`:`➕ Üçlü bonus ${G.sab?"sabote edildi":"tamamlanmadı"}: herkes <b class="neg">−3</b>, hain ${NM[G.tr]} <b class="pos">+10</b>.`);
+ (G.grabs||[]).forEach(g=>{if(g.by<0||g.from<0||g.by===g.from)return;sc[g.by]+=3;sc[g.from]-=3;lg.push(`😈 ${NM[g.by]}, ${NM[g.from]}’in kartını kaptı: <b class="pos">+3</b> / <b class="neg">−3</b>.`)});
  G.all.forEach(r=>{
   if(r.t=="pair"){const h=G.holder[r.x],ok=G.thrown[r.x]&&G.thrown[r.y];sc[h]+=ok?-10:3;lg.push(ok?`💥 ${IN(r.x)} + ${IN(r.y)} ortada buluştu: ${NM[h]} <b class="neg">−10</b>.`:`🍀 ${IN(r.x)} + ${IN(r.y)} buluşmadı: ${NM[h]} <b class="pos">+3</b>.`)}
   if(r.t=="lure"){const ok=G.thrown[r.y]&&G.holder[r.y]!==r.who;sc[r.who]+=ok?8:-2;lg.push(ok?`🎣 ${NM[r.who]}, ${IN(r.y)} kartını başkasına koydurdu: <b class="pos">+8</b>.`:`🎣 ${NM[r.who]}, ${IN(r.y)} kartı koyulmadı ya da kendisi koydu: <b class="neg">−2</b>.`)}});
