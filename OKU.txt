@@ -1,13 +1,17 @@
 KART MASASI 3D — SÜRÜM 2 (TEK DOSYA)
 
-kart-masasi-tek-dosya.html  ->  oyunun TAMAMI (HTML + CSS + JavaScript). Başka dosya gerekmez.
+İKİ DOSYA VAR, İKİSİ DE TEK BAŞINA ÇALIŞIR:
+  1) kart-masasi-tek-dosya.html
+     Okunabilir sürüm. Oyunun tamamı (HTML + CSS + JavaScript) bu dosyada; yalnızca three.js CDN'den gelir
+     (cdnjs -> jsDelivr -> unpkg yedekli). Başka bir yapay zekaya / geliştiriciye vermek için bunu kullan.
+  2) kart-masasi-tek-dosya-offline.html
+     Aynı oyun + three.js (r128, MIT) dosyanın içine gömülü. İNTERNET GEREKMEZ; çift tıkla, anında açılır.
+     Oynamak / arşivlemek / internet olmayan bir ortama taşımak için bunu kullan. (Yaklaşık 680 KB.)
 
 ÇALIŞTIRMA
-  • Dosyayı çift tıkla / tarayıcıya sürükle (Chrome, Edge, Firefox, Safari).
+  • Dosyayı çift tıkla veya tarayıcıya sürükle (Chrome, Edge, Firefox, Safari).
   • Ya da herhangi bir statik yere index.html adıyla yükle: Vercel, GitHub Pages, Netlify, bir klasör...
-  • İnternet gerekir: yalnızca three.js kütüphanesi CDN'den yüklenir (cdnjs -> jsDelivr -> unpkg yedekli).
-    three.js yüklenemezse oyun bunu Türkçe bir bilgi ekranıyla söyler.
-  • Online mod herkese açık MQTT aracıları (WebSocket) kullanır; sunucu/hesap gerekmez.
+  • Online mod (isteğe bağlı) herkese açık MQTT aracıları (WebSocket) kullanır; sunucu/hesap gerekmez, internet ister.
   • Harici görsel, ses, font dosyası YOKTUR. Duman, ses ve efektler kodun içinde üretilir.
 
 BU SÜRÜMDEKİ DEĞİŞİKLİKLER
@@ -25,13 +29,15 @@ KISAYOLLAR
   Boşluk = PAS · D = kart çek · T = talimatım · H = nasıl oynanır · C = sohbet · M = ses · P = piksel · Esc = çıkış
 
 DOĞRULAMA
-  • Dosya tek başına açılır; konsolda hata yok.
-  • Chromium (headless, yazılım WebGL) ile test edildi: 2 ve 4 kişilik oyun, kart atma, kart çekme,
-    sarsıntı, duman, piksel modları ve bitiş ekranı çalışıyor.
-  • SHA-256: c91e206b61c7195bcda92cb381e0201e6015e2fcd0289e816c733d5e5c64fbc3
+  • Chromium (headless, yazılım WebGL) ile test edildi: 2, 3 ve 4 kişilik oyun; kart atma, kart çekme,
+    sarsıntı, duman, piksel modları ve bitiş ekranı çalışıyor; konsolda hata yok.
+  • Offline sürüm, TÜM ağ istekleri engellenerek test edildi: three.js gömülü olduğu için sorunsuz açıldı.
+  • SHA-256 (kart-masasi-tek-dosya.html):          c91e206b61c7195bcda92cb381e0201e6015e2fcd0289e816c733d5e5c64fbc3
+  • SHA-256 (kart-masasi-tek-dosya-offline.html):  66211ab02709d1e28ee3ad0fa7b06478d2ba16347ef947e070fd22b576d00da7
 
 BAŞKA BİR YAPAY ZEKAYA / ORTAMA AKTARMA
-  • kart-masasi-tek-dosya.html dosyasının içeriğini olduğu gibi ver; en üstteki yorum bloğu
-    mimariyi, kod haritasını ve tasarım kararlarını anlatır. Ek dosya gerekmez.
-  • Dosyayı değiştirdikten sonra tarayıcı konsolunda hata olup olmadığına bak; üç boyutlu
-    sahnede üst üste binen yüzeylerde z-fighting için y değerlerini 0.01'den fazla ayır.
+  • Okunabilir sürümün içeriğini olduğu gibi ver; en üstteki yorum bloğu mimariyi, kod haritasını ve
+    tasarım kararlarını anlatır. Ek dosya gerekmez.
+  • Offline sürümde three.js gömülü olduğu için dosya büyüktür; kod düzenlemek için okunabilir sürümü kullan.
+  • Değişiklikten sonra tarayıcı konsolunda hata olup olmadığına bak; üst üste binen yüzeylerde
+    z-fighting olmaması için y değerlerini 0.01'den fazla ayır.
