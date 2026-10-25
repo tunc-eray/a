@@ -18,6 +18,7 @@ KURALLAR: Herkes 2 kartla başlar, kalanlar destede. Sıra gelince karta tıkla 
 KOD HARİTASI (<script> içinde, yaklaşık yukarıdan aşağı):
   sahne: renderer, scene, cam, fit, mk, sprite, faceTex/backTex/shadowTex, cardMesh, showMid(c,up,fx)/hideMid
   arayüz: R (kural metinleri), say, bubble, hud, deckUI (özel çekilen kart + mid), layout (elim), layoutRow (masadaki sıra), drawRP
+  deste (sol): syncDeck3D (yığın), syncPeek/showPeek/clearPeek/bendPeek (kıvrılan üst kart ipucu), peekFaceTex
   cihaz + parşömen: setDev, updAct, handMesh, parchTick (bant sökme / el animasyonu), openBig/closeBig, askExit/doExit
   online: clean/esc, relayApi, mqttApi (mqttOpen = kendi küçük MQTT 3.1.1 istemcisi), roomApi, onlineMenu/createRoom/joinRoom, netPeers,
           startOnline, remote, rejoin, sync (host), clientSetup/applyView/feeds (istemci)
@@ -35,7 +36,7 @@ TASARIM KARARLARI (değiştirmeden önce düşün):
   Sıra PAS'a kadar değişmez. Kart çekmek/almak/ortaya atmak zorunlu değil. Talimatlar gizli; botlar başta talimatlarını doğru ya da yalan açıklar.
   Online: host yetkili (oyun mantığı oda sahibinin tarayıcısında). Taşıma katmanı: join(oda) -> {presence(patch), peers(), onPeers(fn), leave()}.
   presence anahtarları [A-Za-z_][A-Za-z0-9_-]* olmalı, oyuncuya özel veriler DİZİ içinde, metinler clean() ile temiz. Peer kimliği p.peer===NET.me ile karşılaştırılır.
-  Çekilen kart panelde gizli kalır; "ortaya at" deyince havaya fırlayıp dizinin önüne düz konar (parlayan çerçeve = kapılabilir). Talimat parşömeni tahta levhaya bantlıdır; tıklayınca eller bantı sökerek getirir. Çıkış her zaman onay ister.
+  Çekilen kart panelde gizli kalır; soldaki destede alt köşesi kıvrılarak yalnızca bir ipucu gösterilir. "Ortaya at" deyince havaya fırlayıp dizinin önüne düz konar (parlayan çerçeve = kapılabilir). Talimat parşömeni masaya serili deri matın üzerine bantlıdır; tıklayınca eller bantı sökerek kaldırır. Çıkış her zaman onay ister.
 SÜRÜM 2 (bu dosyadaki son geliştirmeler):
   • Halı (masa örtüsü) artık yuvarlak uçlu ve masanın içinde: yanlardan taşmaz (TABLE grubu + 3.46x1.01 düzlem).
   • Ortaya atılan/çekilip atılan kart havadan düşmez: masaya yakın yükseklikten, 265-300 ms'de hızla fırlar, dönerek oturur.
@@ -48,7 +49,8 @@ SÜRÜM 2 (bu dosyadaki son geliştirmeler):
 SÜRÜM 3 (son):
   • "Kart çek" artık kartı masaya koymaz: çekilen kart YALNIZCA sağ-alt panelde "🔒 Sadece sen görüyorsun" olarak görünür; diğer oyuncular görmez.
   • "Ortaya at" seçilince kart havaya fırlar, dizili kartların önündeki boş alana düşer; sarsıntı + duman SADECE bu harekette çalışır.
-  • Elden normal kart koyma: hızlı fırlatma; sarsıntı/duman yok. Deste sırası geriye alındı, halı büyütüldü, parşömen daha yatık.
+  • Elden normal kart koyma: hızlı fırlatma; sarsıntı/duman yok. Normal dizilen kartlar ortada, çekip atılan kart önde; parşömen masaya serili (düz).
+  • Soldaki deste gerçekçi bir kapalı kart destesi. "Kart çek" deyince üst kartın altı kıvrılır, yüzünden yalnızca küçük bir parça görünür (tam belli olmaz).
   • Daha arkadaş bozucu: kart kapma artık +3 / −3 puan çalıyor; botlar daha sık kapıyor. Bitiş ekranında "kim kimi soydu" yazar.
 BİLİNEN EKSİKLER: 3D yerleşim ve dokunmatik kontroller gerçek cihazlarda az denendi. presence herkese açıktır (başkasının eli teknik olarak okunabilir).
 Bot sohbeti hazır cümlelerden. Ses efektleri WebAudio ile sentezlenir (ses dosyası yok). Eski tam proje (sunucu, testler): TUM-KODLAR.txt.
@@ -204,7 +206,7 @@ TABLE.add(mk(new T.TorusGeometry(2.3,.05,8,64).rotateX(Math.PI/2),0xc8922a,0,1.0
  for(let k=0;k<20;k++){x.fillText(k%2?"✦":"☾",110+k*42,64);x.fillText(k%2?"☾":"✦",110+k*42,436)}
  x.strokeStyle="#e9c46a55";x.lineWidth=3;[150,110].forEach(r=>{x.beginPath();x.arc(512,250,r,0,7);x.stroke()});
  x.fillStyle="#e9c46a22";x.beginPath();x.arc(512,250,70,0,7);x.fill();x.restore();
- const m=new T.Mesh(new T.PlaneGeometry(3.46,1.7).rotateX(-Math.PI/2),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true}));m.position.set(0,1.035,-.6);TABLE.add(m)}
+ const m=new T.Mesh(new T.PlaneGeometry(3.46,1.7).rotateX(-Math.PI/2),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true}));m.position.set(0,1.035,.15);TABLE.add(m)}
 const PN=70,pg=new T.BufferGeometry(),pa=new Float32Array(PN*3);for(let i=0;i<PN;i++){pa[i*3]=(Math.random()-.5)*5;pa[i*3+1]=1.1+Math.random()*1.8;pa[i*3+2]=(Math.random()-.5)*4}
 pg.setAttribute("position",new T.BufferAttribute(pa,3));
 scene.add(new T.Points(pg,new T.PointsMaterial({color:0xffe08a,size:.06,transparent:true,opacity:.85,blending:T.AdditiveBlending,depthWrite:false})));
@@ -235,8 +237,8 @@ function showMid(c,up,fx){hideMid();midC=cardMesh(up?cards[c].userData.face:back
  const sh=new T.Mesh(new T.PlaneGeometry(.8,1.08),new T.MeshBasicMaterial({map:shadowTex(),transparent:true,depthWrite:false}));sh.position.set(.03,-.035,-.004);midC.add(sh);
  const gl=new T.Mesh(new T.PlaneGeometry(.95,1.22),new T.MeshBasicMaterial({map:glowTex(),transparent:true,depthWrite:false,opacity:0}));gl.position.z=-.002;midC.add(gl);midC.userData.gl=gl;
  const [dx,dz]=G.cur>0?dirv(G.cur):[0,1];
- const from=G.cur===0?new T.Vector3(1.5,1.06,1.2):new T.Vector3(dx*1.25,1.06,dz*1.25);
- const to=new T.Vector3(.04,1.075,-.06);   // dizili kartlarin ONUNE, bos alana duser
+ const from=G.cur===0?new T.Vector3(-1.65,1.09,1.15):new T.Vector3(dx*1.25,1.06,dz*1.25);
+ const to=new T.Vector3(.04,1.075,.68);   // dizili kartlarin ONUNE, bos alana duser
  midC.rotation.set(-Math.PI/2,0,.12);midC.position.copy(from);midC.scale.setScalar(.84);
  tw.push({m:midC,a:from.clone(),b:to,ra:{x:-Math.PI/2},rx:-Math.PI/2,rz:.03,sa:.84,sb:1,h:.56,t0:performance.now(),d:560,ease:EASE.out,spin:1.5,
   done:()=>{const it=G&&G.items[c];if(fx)puff(to.x,1.08,to.z,12,1.35,it&&it.sab?0x8f7ab8:0xe6ddc8);sfx("slap")}});
@@ -263,6 +265,22 @@ function sfx(kind){const c=ac();if(!c)return;const t=c.currentTime;try{
  }catch(e){}}
 function toggleMute(){MUTED=!MUTED;try{localStorage.kmmute=MUTED?"1":"0"}catch(e){}const b=$("mb");if(b)b.textContent=MUTED?"🔇":"🔊";if(!MUTED)sfx("blip")}
 addEventListener("pointerdown",()=>{ac()},{once:true});
+// ---------- soldaki deste: yigin + gizli bakis ----------
+function syncDeck3D(){if(!G||!G.stack)return;const n=Math.max(0,Math.min(G.deck.length,9));G.deckCards.forEach((c,i)=>{c.visible=i<n});if(G.paper)G.paper.visible=n>0}
+function peekFaceTex(it){const c=document.createElement("canvas");c.width=320;c.height=448;const x=c.getContext("2d"),col="#"+it.c.toString(16).padStart(6,"0");
+ let g=x.createLinearGradient(0,0,0,448);g.addColorStop(0,"#120a2a");g.addColorStop(1,"#1a0f35");x.fillStyle=g;x.fillRect(0,0,320,448);
+ g=x.createRadialGradient(160,418,8,160,418,190);g.addColorStop(0,col+"ee");g.addColorStop(1,"#0000");x.fillStyle=g;x.fillRect(0,0,320,448);
+ x.textAlign="center";x.textBaseline="middle";x.font="130px serif";x.globalAlpha=.92;x.fillText(it.e,160,396);x.globalAlpha=1;
+ x.strokeStyle="#f3d27a";x.lineWidth=14;x.strokeRect(7,7,306,434);return new T.CanvasTexture(c)}
+function peekStripTex(it){const c=document.createElement("canvas");c.width=320;c.height=90;const x=c.getContext("2d"),col="#"+it.c.toString(16).padStart(6,"0"),g=x.createLinearGradient(0,0,320,0);g.addColorStop(0,"#1a0f35");g.addColorStop(.5,col+"bb");g.addColorStop(1,"#1a0f35");x.fillStyle=g;x.fillRect(0,0,320,90);x.strokeStyle="#f3d27a";x.lineWidth=5;x.strokeRect(4,4,312,82);x.textAlign="center";x.textBaseline="middle";x.font="62px serif";x.globalAlpha=.9;x.fillText(it.e,160,48);x.globalAlpha=1;return new T.CanvasTexture(c)}
+function bendPeek(geo,b){const p=geo.attributes.position,base=geo.userData.baseY,h=.72;for(let i=0;i<p.count;i++){const y=base[i],t=Math.max(0,Math.min(1,(-y-.15*h)/(.35*h)));p.setZ(i,b*t*t)}p.needsUpdate=true;geo.computeVertexNormals()}
+function clearPeek(){if(!G||!G.peek)return;const p=G.peek;scene.remove(p.grp);p.geo.dispose();p.top.material.dispose();if(p.bot.material.map)p.bot.material.map.dispose();p.bot.material.dispose();G.peek=null}
+function showPeek(c){clearPeek();const it=G&&G.items[c];if(!it)return;const n=Math.max(0,Math.min(G.deck.length,9)),top=1.102+n*.012+.001;
+ const geo=new T.PlaneGeometry(.5,.72,1,14),base=[];for(let i=0;i<geo.attributes.position.count;i++)base.push(geo.attributes.position.getY(i));geo.userData.baseY=base;
+ const topM=new T.Mesh(geo,new T.MeshBasicMaterial({map:backTex(),side:T.FrontSide}));
+ const botM=new T.Mesh(geo,new T.MeshBasicMaterial({map:peekFaceTex(it),side:T.BackSide}));
+ botM.position.z=-.001;const grp=new T.Group();grp.position.set(-1.65,top,1.15);grp.rotation.x=-Math.PI/2;grp.add(topM);grp.add(botM);topM.frustumCulled=botM.frustumCulled=false;scene.add(grp);G.peek={grp,top:topM,bot:botM,geo,t0:performance.now(),card:c}}
+function syncPeek(){if(!G)return;const want=(G.card!=null&&G.cur==0)?G.card:null;if(want!==(G.peek?G.peek.card:null)){clearPeek();if(want!=null)showPeek(want)}}
 // kartı havadan düşürmeden, masaya yakın ve hızlıca fırlatır
 function flingCard(c,b,jr,sc,p){
  const a=c.position.clone();a.y=1.055;
@@ -306,7 +324,7 @@ function drawRP(){const c=rpC,x=c.getContext("2d"),W2=c.width,H2=c.height,J=k=>(
  x.fillStyle="#6b4a1a";x.font="italic 30px Georgia,serif";x.fillText(full?"büyütmek için tıkla":"… devamı için tıkla",120,H2-52);
  x.fillStyle="#9b1c1c";x.beginPath();x.arc(W2-170,H2-130,54,0,7);x.fill();x.fillStyle="#e07a7a";x.font="bold 62px serif";x.textAlign="center";x.fillText("✦",W2-170,H2-108);x.textAlign="left";rpT.needsUpdate=true}
 function deckUI(){qSync();const d=$("deck"),sb="<br><small>Ortaya konursa üçlü bonusu iptal eder.</small>";
- if(G.dk){G.dk.scale.y=Math.max(.2,G.deck.length*.4);G.dk.position.y=1.02+.05*G.dk.scale.y}
+ syncDeck3D();syncPeek();
  const mine=G.card!=null&&G.cur==0;
  d.classList.toggle("has",!!mine);
  d.style.display=mine||G.mid?"block":"none";
@@ -317,14 +335,14 @@ function layout(){const m=held(0),s=Math.min(.64,2.2/Math.max(m.length,1));cards
  m.forEach((i,k)=>{cards[i].position.set((k-(m.length-1)/2)*s,1.19,2.0);cards[i].rotation.set(-1.15,0,0);cards[i].scale.setScalar(1);cards[i].userData.sh.visible=false});drawRP()}
 function layoutRow(nw){const n=G.pot.length,s=Math.min(.7,3.5/n),sc=n>6?Math.max(.6,6.2/n):1;G.pot.forEach((i,k)=>{const c=cards[i],
   jx=((i*53)%11-5)*.008,jz=((i*37)%13-6)*.008,jr=((i*29)%13-6)*.014,front=i===nw?.16:0,
-  b=new T.Vector3((k-(n-1)/2)*s+jx,1.052+k*.0035,-1.0+jz+front);
+  b=new T.Vector3((k-(n-1)/2)*s+jx,1.052+k*.0035,-.2+jz+front);
  if(G.items[i].sab){c.material.map=backTex();c.material.needsUpdate=true}
  c.userData.sh.visible=true;c.visible=true;
  if(i===nw)flingCard(c,b,jr,sc,G.holder[i]);
  else if(Math.hypot(c.position.x-b.x,c.position.z-b.z)>.012)tw.push({m:c,a:c.position.clone(),b,ra:c.rotation.clone(),rx:-Math.PI/2,rz:jr,sa:c.scale.x,sb:sc,h:0,t0:performance.now(),d:190,ease:EASE.out});
  else{c.position.copy(b);c.rotation.set(-Math.PI/2,0,jr);c.scale.setScalar(sc)}})}
 
-const PA={s:"wall",t0:0,tp:[],hd:[]},PW={p:new T.Vector3(0,1.347,1.481),q:new T.Quaternion().setFromEuler(new T.Euler(-.5,0,0))};
+const PA={s:"wall",t0:0,tp:[],hd:[]},PW={p:new T.Vector3(0,1.043,1.4),q:new T.Quaternion().setFromEuler(new T.Euler(-Math.PI/2,0,0))};
 function setDev(d){DEV=d;document.body.dataset.dev=d;document.body.className="menu";try{localStorage.kmdev=d}catch(e){}fit();if(G)updAct()}
 function updAct(){if(!G)return;const turn=!!(G.my&&PA.s==="wall");$("a_pass").disabled=!turn;$("a_pass").classList.toggle("turn",turn);$("a_draw").disabled=!(G.my&&G.cur==0&&!G.drew&&G.deck.length&&G.card==null);$("a_grab").disabled=!(G.mid&&G.mid.from!=0)}
 function grabBtn(){if(G&&G.mid)grab(0,G.mid.c)}
@@ -342,8 +360,8 @@ function parchTick(){if(!G||!G.rp||!PA.tp.length)return;const rp=G.rp,t=performa
  else if(PA.s==="read"){a=1;c=1;tk=0}
  else if(PA.s==="back"){c=1-cl(t/900);a=1-cl((t-1300)/500);tk=cl((t-900)/400);if(t>=1800)PA.s="wall"}
  const ec=E(c);rp.position.lerpVectors(PW.p,R.p,ec);rp.quaternion.copy(PW.q).slerp(R.q,ec);rp.scale.setScalar(1+(R.s-1)*ec);rp.updateMatrixWorld(true);
- PA.tp.forEach((tp,k)=>{tp.visible=c===0&&tk>0;if(!tp.visible)return;const lf=1-tk;tp.position.copy(corner(k)).add(new T.Vector3(0,.13*lf,.012+.13*lf));tp.rotation.set(-.5-1.2*lf,0,k?-.3:.3);tp.material.opacity=.85*tk;tp.scale.setScalar(.6+.4*tk)});
- PA.hd.forEach((h,k)=>{h.visible=a>0;if(!h.visible)return;const cn=corner(k),st=cn.clone().add(new T.Vector3(k?.5:-.5,-.9,2.4));h.position.lerpVectors(st,cn.add(new T.Vector3(0,0,.06)),E(a));h.lookAt(cam.position)})}
+ PA.tp.forEach((tp,k)=>{tp.visible=c===0&&tk>0;if(!tp.visible)return;const lf=1-tk;tp.position.copy(corner(k)).add(new T.Vector3(0,.012+.13*lf,.012+.13*lf));tp.rotation.set(-Math.PI/2-1.2*lf,0,k?-.3:.3);tp.material.opacity=.85*tk;tp.scale.setScalar(.6+.4*tk)});
+ PA.hd.forEach((h,k)=>{h.visible=a>0&&c<.98;if(!h.visible)return;const cn=corner(k),st=cn.clone().add(new T.Vector3(k?.5:-.5,-.9,2.4));h.position.lerpVectors(st,cn.add(new T.Vector3(0,0,.06)),E(a));h.lookAt(cam.position)})}
 {let r=(typeof matchMedia!=="undefined"&&matchMedia("(pointer:coarse)").matches)?"mob":"pc";try{r=localStorage.kmdev||r}catch(e){}const b=$("dev_"+r);if(b&&b.classList)b.classList.add("rec");document.body.dataset.dev="pc"}
 // ---------- online ----------
 const clean=s=>String(s).replace(/[\u0000-\u001f\u007f-\u009f\u200b\u200c\u200e\u200f\u2028-\u202e\u2060-\u206f\ufeff]/g,"");
@@ -497,7 +515,7 @@ function closeHow(){$("how").style.display="none";if(HOWCB){const f=HOWCB;HOWCB=
 function beginGame(){const n=G.n;for(let p=1;p<n;p++)if(!G.hum[p])later(()=>bubble(p,G.rules[p].map(r=>claim(p,r)).join("\n"),8000),900+(p-1)*3800);
  later(()=>{G.intro=0;say("Herkes talimatını açıkladı. Oyun başlıyor!",1);next()},900+(n-1)*3800+1000)}
 // ---------- kurulum ----------
-function teardown(){PA.s="wall";PA.tp=[];PA.hd=[];$("big").style.display="none";$("pclose").style.display="none";GID++;if(G)G.objs.forEach(o=>scene.remove(o));SMK.forEach(s=>scene.remove(s.o));SMK.length=0;tags.forEach(t=>t&&t.remove());tags=[];heads=[];SEAT=[];cards=[];tw.length=0;hideMid();KICK.m=0;TABLE.position.set(0,0,0);TABLE.rotation.set(0,0,0);cam.position.set(CAMP.x,CAMP.y,CAMP.z);cam.lookAt(CAMP.tx,CAMP.ty,CAMP.tz);cam.rotation.z=0;G=null}
+function teardown(){PA.s="wall";PA.tp=[];PA.hd=[];$("big").style.display="none";$("pclose").style.display="none";GID++;if(G)clearPeek();if(G)G.objs.forEach(o=>scene.remove(o));SMK.forEach(s=>scene.remove(s.o));SMK.length=0;tags.forEach(t=>t&&t.remove());tags=[];heads=[];SEAT=[];cards=[];tw.length=0;hideMid();KICK.m=0;TABLE.position.set(0,0,0);TABLE.rotation.set(0,0,0);cam.position.set(CAMP.x,CAMP.y,CAMP.z);cam.lookAt(CAMP.tx,CAMP.ty,CAMP.tz);cam.rotation.z=0;G=null}
 function start(n){document.body.className="";NM=["Sen",...BOTN];setup(n)}
 function buildScene(){
  for(let p=1;p<G.n;p++){const [dx,dz]=dirv(p);
@@ -510,17 +528,20 @@ function buildScene(){
   const d=document.createElement("div");d.className="tag";d.innerHTML=`<div class="bub"></div><b>${NM[p]}</b>`;document.body.appendChild(d);tags[p]=d}
  G.items.forEach((it,i)=>{const c=add(cardMesh(faceTex(it))),sh=new T.Mesh(new T.PlaneGeometry(.7,.94),new T.MeshBasicMaterial({map:shadowTex(),transparent:true,depthWrite:false}));sh.position.set(.025,-.03,-.006);sh.visible=false;c.add(sh);c.userData={i,face:c.material.map,sh};c.rotation.x=-1.15;c.visible=false;cards[i]=c});
 
- const wd=add(mk(new T.BoxGeometry(2.5,.72,.06),0x5a3a22,0,1.33,1.45,{roughness:.9}));wd.rotation.x=-.5;
- const fr=add(mk(new T.BoxGeometry(2.64,.82,.05),0x2e1d10,0,1.33,1.425,{roughness:.9}));fr.rotation.x=-.5;
+ add(mk(new T.BoxGeometry(2.02,.02,.74),0x2e1d10,0,1.028,1.4,{roughness:.95}));
  rpC=document.createElement("canvas");rpC.width=2160;rpC.height=700;rpT=new T.CanvasTexture(rpC);
  G.rp=add(new T.Mesh(new T.PlaneGeometry(1.9,.616),new T.MeshBasicMaterial({map:rpT,transparent:true,side:T.DoubleSide})));G.rp.position.copy(PW.p);G.rp.quaternion.copy(PW.q);scene.add(G.rp);
- PA.s="wall";PA.tp=[0,1].map(()=>add(mk(new T.BoxGeometry(.24,.075,.01),0xe8dcb5,0,0,0,{transparent:true,opacity:.85})));
+ PA.s="wall";PA.tp=[0,1].map(()=>add(mk(new T.BoxGeometry(.18,.06,.008),0xe8dcb5,0,0,0,{transparent:true,opacity:.85})));
  PA.hd=[0,1].map(()=>{const h=handMesh();h.visible=false;scene.add(h);return add(h)});
  G.pb=add(mk(new T.CylinderGeometry(.34,.38,.12,40),0xc8922a,1.75,1.08,1.25,{metalness:.7,roughness:.35}));
  {const c=document.createElement("canvas");c.width=c.height=256;const x=c.getContext("2d");let g=x.createRadialGradient(128,110,10,128,128,128);g.addColorStop(0,"#ffe9a8");g.addColorStop(1,"#d9a02e");x.fillStyle=g;x.fillRect(0,0,256,256);
   x.strokeStyle="#7a4f10";x.lineWidth=10;x.beginPath();x.arc(128,128,116,0,7);x.stroke();x.fillStyle="#5a3608";x.font="bold 78px Georgia,serif";x.textAlign="center";x.textBaseline="middle";x.fillText("PAS",128,116);x.font="28px serif";x.fillText("✦ ✦ ✦",128,182);
   const tp=new T.Mesh(new T.CircleGeometry(.31,40).rotateX(-Math.PI/2),new T.MeshBasicMaterial({map:new T.CanvasTexture(c)}));tp.position.y=.062;G.pb.add(tp)}
- G.dk=add(mk(new T.BoxGeometry(.55,.1,.78),0x4a2d78,-1.65,1.07,1.15));const ds=sprite("🎴",.5);ds.position.set(-1.65,1.55,1.15);scene.add(ds);add(ds);G.ds=ds;
+ G.dk=add(mk(new T.BoxGeometry(.66,.05,.9),0x3a2a1e,-1.65,1.045,1.15,{roughness:.85}));
+ G.paper=add(mk(new T.BoxGeometry(.56,.05,.78),0xe6dcc6,-1.65,1.075,1.15,{roughness:.9}));
+ G.stack=new T.Group();scene.add(G.stack);add(G.stack);G.deckCards=[];
+ for(let i=0;i<9;i++){const g=new T.PlaneGeometry(.5,.72);g.rotateX(-Math.PI/2);const c=new T.Mesh(g,new T.MeshBasicMaterial({map:backTex(),side:T.DoubleSide}));c.rotation.y=((i*37)%7-3)*.03;c.position.set(-1.65+((i*53)%5-2)*.006,1.102+i*.012,1.15+((i*29)%5-2)*.006);c.visible=false;G.stack.add(c);G.deckCards.push(c)}
+ syncDeck3D();
 }
 function setup(n,opts){teardown();
  const T0=[8,10,12][n-2],base=sh(BASE).slice(0,T0-1).map(mkI),sabId=T0-1,bids=[...Array(T0-1).keys()],P=[...Array(n).keys()];
@@ -623,7 +644,8 @@ addEventListener("keydown",e=>{if(!G||DEV!=="pc"||/INPUT|TEXTAREA/.test((e.targe
   if(w.rx!=null){const sp=(w.spin||0)*(1-e)*(1-e);w.m.rotation.set(w.ra.x+(w.rx-w.ra.x)*e,0,w.rz*e+sp);w.m.scale.setScalar(w.sa+(w.sb-w.sa)*e)}
   if(k>=1){w.m.position.copy(w.b);if(w.rx!=null)w.m.rotation.set(w.rx,0,w.rz);w.m.scale.setScalar(w.sb);if(w.done)w.done();tw.splice(tw.indexOf(w),1)}});
  if(G&&G.pb){const t=performance.now(),pr=G.pb.userData.press?Math.max(0,1-(t-G.pb.userData.press)/220):0;G.pb.material.emissive.setHex(G.my?0x6b4a08:0);G.pb.position.y=1.08+(G.my?Math.sin(t/260)*.025:0);const S0=DEV==="mob"?1.3:1;G.pb.scale.set(S0,S0*(1-.5*pr),S0)}
- if(G&&G.dk){const cd=!!(G.my&&G.cur==0&&!G.drew&&G.deck.length&&G.card==null);G.dk.material.emissive.setHex(cd?0x4a3a99:0);if(G.ds)G.ds.position.y=1.55+(cd?Math.sin(performance.now()/300)*.07:0)}
+ if(G&&G.dk){const cd=!!(G.my&&G.cur==0&&!G.drew&&G.deck.length&&G.card==null);G.dk.material.emissive.setHex(cd?0x6a4a10:0)}
+ if(G&&G.peek){const pk=Math.min(1,(performance.now()-G.peek.t0)/560),pe=1-Math.pow(1-pk,3);bendPeek(G.peek.geo,.30*pe)}
  if(midC&&midC.userData.gl)midC.userData.gl.material.opacity=G&&G.mid&&G.mid.from!=0?.55+Math.sin(performance.now()/200)*.35:0;{const a=pg.attributes.position.array,t=performance.now()/1000;for(let i=0;i<PN;i++){a[i*3+1]+=.004;a[i*3]+=Math.sin(t+i)*.0015;if(a[i*3+1]>2.9)a[i*3+1]=1.1}pg.attributes.position.needsUpdate=true}
  const NOW=performance.now(),shp=KICK.m>0?Math.max(0,1-(NOW-KICK.t0)/KICK.d):0,sta=shp*shp*KICK.m;
  if(shp>0){TABLE.position.x=Math.sin(NOW*.065)*.018*sta;TABLE.position.z=Math.cos(NOW*.083)*.013*sta;TABLE.rotation.y=Math.sin(NOW*.055)*.004*sta;

@@ -18,8 +18,10 @@ SÜRÜM 3'TE NE DEĞİŞTİ
   • Elden normal kart koyma: hızlı fırlatma; sarsıntı ve duman YOK.
   • Daha arkadaş bozucu: kart kapma artık +3 / −3 puan çalıyor. Botlar daha sık kapıyor.
     Bitiş ekranında "kim kimi soydu" yazıyor.
-  • Masa düzeni: deste sırası geriye alındı, halı büyütüldü, parşömen daha yatık yapıldı;
-    böylece atılan kart önde ve görünür kalıyor.
+  • Masa düzeni: normal dizilen kartlar ortada, çekip atılan kart önde; parşömen masaya serili (düz)
+    ve önü kapatmıyor. Böylece kartlar karşı oyuncunun talimat alanına girmiyor.
+  • Soldaki deste gerçekçi bir kapalı kart destesi. "Kart çek" deyince üst kartın altı kıvrılır,
+    yüzünden yalnızca küçük bir parça görünür (tam belli olmaz).
   • Sıra halkası + bot nefes animasyonu, WebAudio sesler (dosya yok), M ile ses, Esc ile çıkış.
 
 KISAYOLLAR
@@ -29,8 +31,8 @@ DOĞRULAMA
   • Chromium (headless, yazılım WebGL) ile test edildi: 2/3/4 kişilik oyun, çek → ortaya at,
     elden atma, kapma (+3/−3), bitiş ekranı, piksel modları; konsolda hata yok.
   • Offline sürüm TÜM ağ istekleri engellenerek açıldı; sorunsuz çalıştı.
-  • SHA-256 (kart-masasi-tek-dosya.html):          b452923d513fb8988029f24dc9b61b9d8354fca780d3fb4b10ddbd9c526f0ed2
-  • SHA-256 (kart-masasi-tek-dosya-offline.html):  f5067da10396f1b5ba51dba179d0835cad9ecafea1b26b5a564bab99296576c1
+  • SHA-256 (kart-masasi-tek-dosya.html):          510c4b0215f83c8c8a51cacd077545bda9f2c7880284c56cb8380dbfb182f673
+  • SHA-256 (kart-masasi-tek-dosya-offline.html):  fb4ac51798544a2ea91410003933ed6769cebe6ded53001369fc052b20283933
 
 BAŞKA BİR YAPAY ZEKAYA / ORTAMA AKTARMA
   • Okunabilir sürümün içeriğini olduğu gibi ver; en üstteki yorum bloğu mimariyi,
